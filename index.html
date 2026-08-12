@@ -972,10 +972,10 @@ html&gt;body{padding:0}&lt;/style&gt;
     #compound-sim-jp .plot-relative { position: relative; }
     #compound-sim-jp .table-block { margin-top: 28px; }
     #compound-sim-jp .table-block h2 { margin-bottom: 8px; }
-    #compound-sim-jp .table-responsive { overflow-x: auto; border: 1px solid var(--sim-border); border-radius: 14px; }
+    #compound-sim-jp .table-responsive { overflow: visible; border: 1px solid var(--sim-border); border-radius: 14px; }
     #compound-sim-jp .table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
     #compound-sim-jp .table th, #compound-sim-jp .table td { padding: 11px 14px; border-bottom: 1px solid var(--sim-border); }
-    #compound-sim-jp .table th { text-align: left; background: var(--sim-soft); font-weight: 500; }
+    #compound-sim-jp .table th { position: sticky; top: 0; z-index: 2; text-align: left; background: color-mix(in srgb, AccentColor 12%, Canvas); font-weight: 500; box-shadow: 0 1px 0 var(--sim-border), 0 5px 12px color-mix(in srgb, CanvasText 8%, transparent); }
     #compound-sim-jp .table tbody tr:last-child td { border-bottom: 0; }
     #compound-sim-jp .table tbody tr:hover { background: var(--sim-soft); }
     #compound-sim-jp .text-end { text-align: right !important; }
@@ -990,6 +990,7 @@ html&gt;body{padding:0}&lt;/style&gt;
       #compound-sim-jp .controls-wrap, #compound-sim-jp .metrics { grid-template-columns: 1fr; }
       #compound-sim-jp .chart-shell { min-height: 245px; }
       #compound-sim-jp .table th, #compound-sim-jp .table td { padding: 9px 10px; }
+      #compound-sim-jp .table-responsive { overflow-x: auto; }
     }
   &lt;/style&gt;
 
