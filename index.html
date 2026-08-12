@@ -938,7 +938,8 @@ html&gt;body{padding:0}&lt;/style&gt;
     #compound-sim-jp .form-check { display: flex; align-items: center; gap: 10px; }
     #compound-sim-jp .form-check-input { width: 42px; height: 23px; accent-color: AccentColor; cursor: pointer; }
     #compound-sim-jp .form-check-label { font-weight: 500; cursor: pointer; }
-    #compound-sim-jp .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 0 0 26px; }
+    #compound-sim-jp .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 0 0 26px; }
+    #compound-sim-jp .limit-note { grid-column: 1 / -1; margin: 0; color: var(--sim-muted); }
     #compound-sim-jp .card {
       padding: 18px;
       background: var(--sim-surface);
@@ -984,6 +985,7 @@ html&gt;body{padding:0}&lt;/style&gt;
     #compound-sim-jp .gain-negative { color: MarkText; background: Mark; }
     @media (max-width: 820px) {
       #compound-sim-jp .controls-wrap { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #compound-sim-jp .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 560px) {
       #compound-sim-jp { padding: 14px; }
@@ -1011,10 +1013,11 @@ html&gt;body{padding:0}&lt;/style&gt;
     &lt;/label&gt;
     &lt;div class=&quot;switch-line&quot;&gt;
       &lt;div class=&quot;form-check form-switch&quot;&gt;
-        &lt;input class=&quot;form-check-input&quot; id=&quot;cs-taxable&quot; type=&quot;checkbox&quot;&gt;
-        &lt;label class=&quot;form-check-label&quot; for=&quot;cs-taxable&quot;&gt;&lt;span id=&quot;cs-tax-label&quot;&gt;非課税対象&lt;/span&gt;&lt;/label&gt;
+        &lt;input class=&quot;form-check-input&quot; id=&quot;cs-nisa&quot; type=&quot;checkbox&quot;&gt;
+        &lt;label class=&quot;form-check-label&quot; for=&quot;cs-nisa&quot;&gt;&lt;span id=&quot;cs-nisa-label&quot;&gt;NISAを利用しない&lt;/span&gt;&lt;/label&gt;
       &lt;/div&gt;
     &lt;/div&gt;
+    &lt;p class=&quot;limit-note text-small&quot; id=&quot;cs-limit-note&quot;&gt;通常の課税口座として計算します。&lt;/p&gt;
   &lt;/div&gt;
 
   &lt;div class=&quot;viz-grid metrics&quot; aria-live=&quot;polite&quot;&gt;
@@ -1032,6 +1035,11 @@ html&gt;body{padding:0}&lt;/style&gt;
       &lt;div class=&quot;text-muted&quot;&gt;運用益&lt;/div&gt;
       &lt;div class=&quot;viz-stat-value&quot; id=&quot;cs-gain&quot;&gt;—&lt;/div&gt;
       &lt;div class=&quot;text-small text-muted&quot; id=&quot;cs-multiple&quot;&gt;—&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;card viz-stat&quot;&gt;
+      &lt;div class=&quot;text-muted&quot;&gt;もし課税対象なら&lt;/div&gt;
+      &lt;div class=&quot;viz-stat-value&quot; id=&quot;cs-tax&quot;&gt;—&lt;/div&gt;
+      &lt;div class=&quot;text-small text-muted&quot;&gt;運用益に20.315%を適用した想定税額&lt;/div&gt;
     &lt;/div&gt;
   &lt;/div&gt;
 
@@ -1053,7 +1061,7 @@ html&gt;body{padding:0}&lt;/style&gt;
     &lt;h2 id=&quot;cs-table-title&quot;&gt;年ごとの明細&lt;/h2&gt;
     &lt;div class=&quot;table-responsive&quot;&gt;
       &lt;table class=&quot;table table-sm&quot;&gt;
-        &lt;thead&gt;&lt;tr&gt;&lt;th&gt;年&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;資産総額&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;累計投資額&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;運用益&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+        &lt;thead&gt;&lt;tr&gt;&lt;th&gt;年&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;資産総額&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;累計投資額&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;運用益&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;もし課税対象なら&lt;br&gt;想定税額&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
         &lt;tbody id=&quot;cs-body&quot;&gt;&lt;/tbody&gt;
       &lt;/table&gt;
     &lt;/div&gt;
@@ -1063,8 +1071,10 @@ html&gt;body{padding:0}&lt;/style&gt;
   (() =&gt; {
     const root = document.getElementById(&#x27;compound-sim-jp&#x27;);
     const $ = id =&gt; root.querySelector(&#x27;#&#x27; + id);
-    const inputs = [&#x27;cs-principal&#x27;, &#x27;cs-monthly&#x27;, &#x27;cs-rate&#x27;, &#x27;cs-taxable&#x27;].map($);
+    const inputs = [&#x27;cs-principal&#x27;, &#x27;cs-monthly&#x27;, &#x27;cs-rate&#x27;, &#x27;cs-nisa&#x27;].map($);
     const taxRate = 0.20315;
+    const nisaLifetimeLimit = 18000000;
+    const nisaAnnualLimit = 3600000;
     const yen = new Intl.NumberFormat(&#x27;ja-JP&#x27;, { style: &#x27;currency&#x27;, currency: &#x27;JPY&#x27;, maximumFractionDigits: 0 });
     const shortYen = value =&gt; {
       const abs = Math.abs(value);
@@ -1078,32 +1088,48 @@ html&gt;body{padding:0}&lt;/style&gt;
       const principal = Math.max(0, clean($(&#x27;cs-principal&#x27;)));
       const monthly = Math.max(0, clean($(&#x27;cs-monthly&#x27;)));
       const annual = Math.max(-99, clean($(&#x27;cs-rate&#x27;))) / 100;
-      const taxable = $(&#x27;cs-taxable&#x27;).checked;
-      const netAnnual = taxable &amp;&amp; annual &gt; 0 ? annual * (1 - taxRate) : annual;
-      const monthlyRate = Math.pow(1 + netAnnual, 1 / 12) - 1;
+      const nisa = $(&#x27;cs-nisa&#x27;).checked;
+      const monthlyRate = Math.pow(1 + annual, 1 / 12) - 1;
       let balance = principal;
       let contributed = principal;
-      const rows = [{ year: 0, balance, contributed, gain: balance - contributed }];
+      let annualInvested = 0;
+      const makeRow = year =&gt; {
+        const grossGain = balance - contributed;
+        const potentialTax = Math.max(0, grossGain) * taxRate;
+        const displayBalance = nisa ? balance : balance - potentialTax;
+        return { year, balance: displayBalance, contributed, gain: displayBalance - contributed, potentialTax };
+      };
+      const rows = [makeRow(0)];
       for (let month = 1; month &lt;= 600; month++) {
-        balance = balance * (1 + monthlyRate) + monthly;
-        contributed += monthly;
-        if (month % 12 === 0) rows.push({ year: month / 12, balance, contributed, gain: balance - contributed });
+        if ((month - 1) % 12 === 0) annualInvested = 0;
+        let deposit = monthly;
+        if (nisa) {
+          deposit = Math.min(deposit, Math.max(0, nisaAnnualLimit - annualInvested), Math.max(0, nisaLifetimeLimit - contributed));
+        }
+        balance = balance * (1 + monthlyRate) + deposit;
+        contributed += deposit;
+        annualInvested += deposit;
+        if (month % 12 === 0) rows.push(makeRow(month / 12));
       }
-      return { rows, taxable };
+      return { rows, nisa, requestedMonthly: monthly };
     }
 
     function render() {
       const state = calculate();
       const last = state.rows[state.rows.length - 1];
-      $(&#x27;cs-tax-label&#x27;).textContent = state.taxable ? &#x27;課税対象&#x27; : &#x27;非課税対象&#x27;;
-      $(&#x27;cs-mode-note&#x27;).textContent = state.taxable ? &#x27;運用益に税率20.315%を反映&#x27; : &#x27;非課税で計算&#x27;;
+      $(&#x27;cs-nisa-label&#x27;).textContent = state.nisa ? &#x27;NISAを利用する&#x27; : &#x27;NISAを利用しない&#x27;;
+      $(&#x27;cs-mode-note&#x27;).textContent = state.nisa ? &#x27;NISAの非課税枠で計算&#x27; : &#x27;売却時の想定税額を差し引いて表示&#x27;;
+      $(&#x27;cs-limit-note&#x27;).textContent = state.nisa
+        ? &#x27;NISA：年間360万円・生涯1,800万円まで。上限を超える積立分は自動的に除外します。&#x27;
+        : &#x27;通常の課税口座として計算します。想定税額は売却時に運用益へ20.315%を適用した概算です。&#x27;;
       $(&#x27;cs-final&#x27;).textContent = yen.format(last.balance);
       $(&#x27;cs-contrib&#x27;).textContent = yen.format(last.contributed);
       $(&#x27;cs-gain&#x27;).textContent = yen.format(last.gain);
+      $(&#x27;cs-tax&#x27;).textContent = yen.format(last.potentialTax);
       $(&#x27;cs-gain&#x27;).classList.toggle(&#x27;gain-positive&#x27;, last.gain &gt;= 0);
       $(&#x27;cs-gain&#x27;).classList.toggle(&#x27;gain-negative&#x27;, last.gain &lt; 0);
       $(&#x27;cs-multiple&#x27;).textContent = last.contributed &gt; 0 ? &#x27;投資額の &#x27; + (last.balance / last.contributed).toFixed(2) + &#x27;倍&#x27; : &#x27;—&#x27;;
-      $(&#x27;cs-body&#x27;).innerHTML = state.rows.slice(1).map(d =&gt; `&lt;tr&gt;&lt;td&gt;${d.year}年&lt;/td&gt;&lt;td class=&quot;text-end text-nowrap&quot;&gt;${yen.format(d.balance)}&lt;/td&gt;&lt;td class=&quot;text-end text-nowrap&quot;&gt;${yen.format(d.contributed)}&lt;/td&gt;&lt;td class=&quot;text-end text-nowrap ${d.gain &gt;= 0 ? &#x27;gain-positive&#x27; : &#x27;gain-negative&#x27;}&quot;&gt;${yen.format(d.gain)}&lt;/td&gt;&lt;/tr&gt;`).join(&#x27;&#x27;);
+      $(&#x27;cs-body&#x27;).innerHTML = state.rows.slice(1).map(d =&gt; `&lt;tr&gt;&lt;td&gt;${d.year}年&lt;/td&gt;&lt;td class=&quot;text-end text-nowrap&quot;&gt;${yen.format(d.balance)}&lt;/td&gt;&lt;td class=&quot;text-end text-nowrap&quot;&gt;${yen.format(d.contributed)}&lt;/td&gt;&lt;td class=&quot;text-end text-nowrap ${d.gain &gt;= 0 ? &#x27;gain-positive&#x27; : &#x27;gain-negative&#x27;}&quot;&gt;${yen.format(d.gain)}&lt;/td&gt;&lt;td class=&quot;text-end text-nowrap&quot;&gt;${yen.format(d.potentialTax)}&lt;/td&gt;&lt;/tr&gt;`).join(&#x27;&#x27;);
       draw(state.rows);
     }
 
