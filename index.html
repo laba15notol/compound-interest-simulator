@@ -912,7 +912,7 @@ html&gt;body{padding:0}&lt;/style&gt;
     #compound-sim-jp .sim-subtitle { margin: 0; color: var(--sim-muted); }
     #compound-sim-jp .controls-wrap {
       display: grid;
-      grid-template-columns: repeat(3, minmax(150px, 1fr)) minmax(160px, .8fr);
+      grid-template-columns: repeat(4, minmax(150px, 1fr)) minmax(160px, .8fr);
       gap: 16px;
       align-items: end;
       padding: 20px;
@@ -1002,8 +1002,11 @@ html&gt;body{padding:0}&lt;/style&gt;
   &lt;/header&gt;
 
   &lt;div class=&quot;viz-controls controls-wrap&quot; aria-label=&quot;運用条件&quot;&gt;
-    &lt;label class=&quot;form-label&quot; for=&quot;cs-principal&quot;&gt;元金（円）
-      &lt;input class=&quot;form-control&quot; id=&quot;cs-principal&quot; type=&quot;number&quot; min=&quot;0&quot; step=&quot;10000&quot; value=&quot;1000000&quot; inputmode=&quot;numeric&quot;&gt;
+    &lt;label class=&quot;form-label&quot; for=&quot;cs-cost&quot;&gt;取得額（円）
+      &lt;input class=&quot;form-control&quot; id=&quot;cs-cost&quot; type=&quot;number&quot; min=&quot;0&quot; step=&quot;10000&quot; value=&quot;1000000&quot; inputmode=&quot;numeric&quot;&gt;
+    &lt;/label&gt;
+    &lt;label class=&quot;form-label&quot; for=&quot;cs-current&quot;&gt;現在の評価額（円）
+      &lt;input class=&quot;form-control&quot; id=&quot;cs-current&quot; type=&quot;number&quot; min=&quot;0&quot; step=&quot;10000&quot; value=&quot;1200000&quot; inputmode=&quot;numeric&quot;&gt;
     &lt;/label&gt;
     &lt;label class=&quot;form-label&quot; for=&quot;cs-monthly&quot;&gt;月々の積立（円）
       &lt;input class=&quot;form-control&quot; id=&quot;cs-monthly&quot; type=&quot;number&quot; min=&quot;0&quot; step=&quot;1000&quot; value=&quot;30000&quot; inputmode=&quot;numeric&quot;&gt;
@@ -1029,7 +1032,7 @@ html&gt;body{padding:0}&lt;/style&gt;
     &lt;div class=&quot;card viz-stat&quot;&gt;
       &lt;div class=&quot;text-muted&quot;&gt;累計投資額&lt;/div&gt;
       &lt;div class=&quot;viz-stat-value&quot; id=&quot;cs-contrib&quot;&gt;—&lt;/div&gt;
-      &lt;div class=&quot;text-small text-muted&quot;&gt;元金＋積立額&lt;/div&gt;
+      &lt;div class=&quot;text-small text-muted&quot;&gt;取得額＋今後の積立額&lt;/div&gt;
     &lt;/div&gt;
     &lt;div class=&quot;card viz-stat&quot;&gt;
       &lt;div class=&quot;text-muted&quot;&gt;運用益&lt;/div&gt;
@@ -1071,7 +1074,7 @@ html&gt;body{padding:0}&lt;/style&gt;
   (() =&gt; {
     const root = document.getElementById(&#x27;compound-sim-jp&#x27;);
     const $ = id =&gt; root.querySelector(&#x27;#&#x27; + id);
-    const inputs = [&#x27;cs-principal&#x27;, &#x27;cs-monthly&#x27;, &#x27;cs-rate&#x27;, &#x27;cs-nisa&#x27;].map($);
+    const inputs = [&#x27;cs-cost&#x27;, &#x27;cs-current&#x27;, &#x27;cs-monthly&#x27;, &#x27;cs-rate&#x27;, &#x27;cs-nisa&#x27;].map($);
     const taxRate = 0.20315;
     const nisaLifetimeLimit = 18000000;
     const nisaAnnualLimit = 3600000;
@@ -1085,13 +1088,14 @@ html&gt;body{padding:0}&lt;/style&gt;
     const clean = (el, fallback = 0) =&gt; Number.isFinite(Number(el.value)) ? Number(el.value) : fallback;
 
     function calculate() {
-      const principal = Math.max(0, clean($(&#x27;cs-principal&#x27;)));
+      const acquisitionCost = Math.max(0, clean($(&#x27;cs-cost&#x27;)));
+      const currentValue = Math.max(0, clean($(&#x27;cs-current&#x27;)));
       const monthly = Math.max(0, clean($(&#x27;cs-monthly&#x27;)));
       const annual = Math.max(-99, clean($(&#x27;cs-rate&#x27;))) / 100;
       const nisa = $(&#x27;cs-nisa&#x27;).checked;
       const monthlyRate = Math.pow(1 + annual, 1 / 12) - 1;
-      let balance = principal;
-      let contributed = principal;
+      let balance = currentValue;
+      let contributed = acquisitionCost;
       let annualInvested = 0;
       const makeRow = year =&gt; {
         const grossGain = balance - contributed;
@@ -1120,7 +1124,7 @@ html&gt;body{padding:0}&lt;/style&gt;
       $(&#x27;cs-nisa-label&#x27;).textContent = state.nisa ? &#x27;NISAを利用する&#x27; : &#x27;NISAを利用しない&#x27;;
       $(&#x27;cs-mode-note&#x27;).textContent = state.nisa ? &#x27;NISAの非課税枠で計算&#x27; : &#x27;売却時の想定税額を差し引いて表示&#x27;;
       $(&#x27;cs-limit-note&#x27;).textContent = state.nisa
-        ? &#x27;NISA：年間360万円・生涯1,800万円まで。上限を超える積立分は自動的に除外します。&#x27;
+        ? &#x27;NISA：取得額と今後の積立額をもとに、年間360万円・生涯1,800万円まで計算します。上限を超える積立分は自動的に除外します。&#x27;
         : &#x27;通常の課税口座として計算します。想定税額は売却時に運用益へ20.315%を適用した概算です。&#x27;;
       $(&#x27;cs-final&#x27;).textContent = yen.format(last.balance);
       $(&#x27;cs-contrib&#x27;).textContent = yen.format(last.contributed);
