@@ -1029,9 +1029,6 @@ html&gt;body{padding:0}&lt;/style&gt;
     &lt;label class=&quot;form-label forward-only&quot; for=&quot;cs-monthly&quot;&gt;月々の積立（円）
       &lt;input class=&quot;form-control&quot; id=&quot;cs-monthly&quot; type=&quot;text&quot; value=&quot;30,000&quot; inputmode=&quot;numeric&quot; pattern=&quot;[0-9,]*&quot;&gt;
     &lt;/label&gt;
-    &lt;label class=&quot;form-label forward-only&quot; for=&quot;cs-years&quot;&gt;何年後
-      &lt;input class=&quot;form-control&quot; id=&quot;cs-years&quot; type=&quot;number&quot; min=&quot;0&quot; max=&quot;80&quot; step=&quot;1&quot; value=&quot;50&quot; inputmode=&quot;numeric&quot;&gt;
-    &lt;/label&gt;
     &lt;label class=&quot;form-label&quot; for=&quot;cs-rate&quot;&gt;年間利回り（%）
       &lt;input class=&quot;form-control&quot; id=&quot;cs-rate&quot; type=&quot;number&quot; min=&quot;-99&quot; max=&quot;100&quot; step=&quot;0.1&quot; value=&quot;5&quot; inputmode=&quot;decimal&quot;&gt;
     &lt;/label&gt;
@@ -1138,7 +1135,7 @@ html&gt;body{padding:0}&lt;/style&gt;
       &lt;label class=&quot;form-label&quot; for=&quot;cs-dc-rate&quot;&gt;DC年間利回り（%）
         &lt;input class=&quot;form-control&quot; id=&quot;cs-dc-rate&quot; type=&quot;number&quot; min=&quot;-99&quot; max=&quot;100&quot; step=&quot;0.1&quot; value=&quot;5&quot; inputmode=&quot;decimal&quot;&gt;
       &lt;/label&gt;
-      &lt;p class=&quot;limit-note text-small&quot;&gt;通常資産は上の取得額・現在の評価額・月々の積立・何年後・年間利回り・NISA設定を使います。&lt;/p&gt;
+      &lt;p class=&quot;limit-note text-small&quot;&gt;通常資産は上の取得額・現在の評価額・月々の積立・年間利回り・NISA設定を使います。50年後までの合計資産を確認できます。&lt;/p&gt;
     &lt;/div&gt;
 
     &lt;div class=&quot;goal-summary&quot; aria-live=&quot;polite&quot;&gt;
@@ -1170,7 +1167,7 @@ html&gt;body{padding:0}&lt;/style&gt;
     const root = document.getElementById(&#x27;compound-sim-jp&#x27;);
     const $ = id =&gt; root.querySelector(&#x27;#&#x27; + id);
     const amountInputs = [&#x27;cs-cost&#x27;, &#x27;cs-current&#x27;, &#x27;cs-monthly&#x27;, &#x27;cs-target-amount&#x27;, &#x27;cs-dc-current&#x27;, &#x27;cs-dc-monthly&#x27;].map($);
-    const inputs = [&#x27;cs-cost&#x27;, &#x27;cs-current&#x27;, &#x27;cs-monthly&#x27;, &#x27;cs-years&#x27;, &#x27;cs-rate&#x27;, &#x27;cs-nisa&#x27;, &#x27;cs-current-age&#x27;, &#x27;cs-target-age&#x27;, &#x27;cs-target-amount&#x27;, &#x27;cs-dc-current&#x27;, &#x27;cs-dc-monthly&#x27;, &#x27;cs-dc-rate&#x27;].map($);
+    const inputs = [&#x27;cs-cost&#x27;, &#x27;cs-current&#x27;, &#x27;cs-monthly&#x27;, &#x27;cs-rate&#x27;, &#x27;cs-nisa&#x27;, &#x27;cs-current-age&#x27;, &#x27;cs-target-age&#x27;, &#x27;cs-target-amount&#x27;, &#x27;cs-dc-current&#x27;, &#x27;cs-dc-monthly&#x27;, &#x27;cs-dc-rate&#x27;].map($);
     const tabs = [&#x27;forward&#x27;, &#x27;goal&#x27;, &#x27;combined&#x27;];
     const taxRate = 0.20315;
     const nisaLifetimeLimit = 18000000;
@@ -1247,7 +1244,7 @@ html&gt;body{padding:0}&lt;/style&gt;
     function calculate() {
       const base = getBaseInputs();
       const monthly = Math.max(0, cleanAmount($(&#x27;cs-monthly&#x27;)));
-      const years = Math.max(0, Math.round(clean($(&#x27;cs-years&#x27;), 50)));
+      const years = 50;
       const months = Math.round(years * 12);
       const rows = project(months, monthly, base);
       const nisa = base.nisa;
@@ -1303,7 +1300,7 @@ html&gt;body{padding:0}&lt;/style&gt;
 
     function calculateCombined() {
       const base = getBaseInputs();
-      const years = Math.max(0, Math.round(clean($(&#x27;cs-years&#x27;), 50)));
+      const years = 50;
       const months = Math.round(years * 12);
       const regularMonthly = Math.max(0, cleanAmount($(&#x27;cs-monthly&#x27;)));
       const regular = lastOf(project(months, regularMonthly, base));
