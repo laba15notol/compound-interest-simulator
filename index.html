@@ -1136,7 +1136,7 @@ html&gt;body{padding:0}&lt;/style&gt;
       &lt;label class=&quot;form-label&quot; for=&quot;cs-dc-rate&quot;&gt;DC年間利回り（%）
         &lt;input class=&quot;form-control&quot; id=&quot;cs-dc-rate&quot; type=&quot;number&quot; min=&quot;-99&quot; max=&quot;100&quot; step=&quot;0.1&quot; value=&quot;5&quot; inputmode=&quot;decimal&quot;&gt;
       &lt;/label&gt;
-      &lt;p class=&quot;limit-note text-small&quot;&gt;通常資産は上の取得額・現在の評価額・月々の積立・年間利回り・NISA設定を使います。50年後までの合計資産を確認できます。&lt;/p&gt;
+      &lt;p class=&quot;limit-note text-small&quot;&gt;通常資産は上の取得額・現在の評価額・月々の積立・年間利回り・NISA設定を使います。NISAなしの場合は通常資産の売却時想定税額を差し引いた表示額で、50年後までの合計資産を確認できます。&lt;/p&gt;
     &lt;/div&gt;
 
     &lt;div class=&quot;goal-summary&quot; aria-live=&quot;polite&quot;&gt;
@@ -1148,7 +1148,7 @@ html&gt;body{padding:0}&lt;/style&gt;
       &lt;div class=&quot;card viz-stat&quot;&gt;
         &lt;div class=&quot;text-muted&quot;&gt;通常資産&lt;/div&gt;
         &lt;div class=&quot;viz-stat-value&quot; id=&quot;cs-combined-regular&quot;&gt;—&lt;/div&gt;
-        &lt;div class=&quot;text-small text-muted&quot;&gt;NISA設定を反映&lt;/div&gt;
+        &lt;div class=&quot;text-small text-muted&quot; id=&quot;cs-combined-regular-note&quot;&gt;NISA設定を反映&lt;/div&gt;
       &lt;/div&gt;
       &lt;div class=&quot;card viz-stat&quot;&gt;
         &lt;div class=&quot;text-muted&quot;&gt;DC資産&lt;/div&gt;
@@ -1180,7 +1180,7 @@ html&gt;body{padding:0}&lt;/style&gt;
       &lt;h2 id=&quot;cs-combined-table-title&quot;&gt;年ごとの明細&lt;/h2&gt;
       &lt;div class=&quot;table-responsive&quot;&gt;
         &lt;table class=&quot;table table-sm&quot;&gt;
-          &lt;thead&gt;&lt;tr&gt;&lt;th&gt;年&lt;/th&gt;&lt;th&gt;年齢&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;合計資産&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;通常資産&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;DC資産&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;累計投資・拠出額&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+          &lt;thead&gt;&lt;tr&gt;&lt;th&gt;年&lt;/th&gt;&lt;th&gt;年齢&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;合計資産（表示額）&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;通常資産（表示額）&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;DC資産&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;累計投資・拠出額&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
           &lt;tbody id=&quot;cs-combined-body&quot;&gt;&lt;/tbody&gt;
         &lt;/table&gt;
       &lt;/div&gt;
@@ -1348,7 +1348,7 @@ html&gt;body{padding:0}&lt;/style&gt;
       const regular = lastOf(regularRows);
       const dc = lastOf(dcRows);
       const total = regular.balance + dc.balance;
-      return { rows, regular, dc, total, targetAge: base.currentAge + years, years, months };
+      return { rows, regular, dc, total, targetAge: base.currentAge + years, years, months, nisa: base.nisa };
     }
 
     function render() {
@@ -1389,9 +1389,10 @@ html&gt;body{padding:0}&lt;/style&gt;
 
     function renderCombined(combined) {
       $(&#x27;cs-combined-total&#x27;).textContent = yen.format(combined.total);
-      $(&#x27;cs-combined-total-label&#x27;).textContent = combined.years.toLocaleString(&#x27;ja-JP&#x27;) + &#x27;年後の合計資産&#x27;;
-      $(&#x27;cs-combined-gap&#x27;).textContent = combined.targetAge.toFixed(combined.targetAge % 1 === 0 ? 0 : 1) + &#x27;歳時点&#x27;;
+      $(&#x27;cs-combined-total-label&#x27;).textContent = combined.years.toLocaleString(&#x27;ja-JP&#x27;) + &#x27;年後の合計資産&#x27; + (combined.nisa ? &#x27;（非課税）&#x27; : &#x27;（税引後）&#x27;);
+      $(&#x27;cs-combined-gap&#x27;).textContent = combined.targetAge.toFixed(combined.targetAge % 1 === 0 ? 0 : 1) + &#x27;歳時点・&#x27; + (combined.nisa ? &#x27;NISA非課税＋DC&#x27; : &#x27;通常資産は売却時税引後＋DC&#x27;);
       $(&#x27;cs-combined-regular&#x27;).textContent = yen.format(combined.regular.balance);
+      $(&#x27;cs-combined-regular-note&#x27;).textContent = combined.nisa ? &#x27;NISA非課税で表示&#x27; : &#x27;売却時の想定税額を差し引いて表示&#x27;;
       $(&#x27;cs-combined-dc&#x27;).textContent = yen.format(combined.dc.balance);
       $(&#x27;cs-combined-dc-note&#x27;).textContent = &#x27;拠出累計 &#x27; + yen.format(combined.dc.contributed);
       $(&#x27;cs-combined-years&#x27;).textContent = combined.years.toFixed(combined.years % 1 === 0 ? 0 : 1) + &#x27;年&#x27;;
