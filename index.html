@@ -997,7 +997,7 @@ html&gt;body{padding:0}&lt;/style&gt;
     }
     @media (max-width: 560px) {
       #compound-sim-jp { padding: 14px; }
-      #compound-sim-jp .tabs { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+      #compound-sim-jp .tabs { display: grid; grid-template-columns: 1fr; width: 100%; }
       #compound-sim-jp .controls-wrap, #compound-sim-jp .metrics, #compound-sim-jp .goal-summary { grid-template-columns: 1fr; }
       #compound-sim-jp .chart-shell { min-height: 245px; }
       #compound-sim-jp .table th, #compound-sim-jp .table td { padding: 9px 10px; }
@@ -1013,6 +1013,7 @@ html&gt;body{padding:0}&lt;/style&gt;
   &lt;div class=&quot;tabs&quot; role=&quot;tablist&quot; aria-label=&quot;計算モード&quot;&gt;
     &lt;button class=&quot;tab-button&quot; id=&quot;cs-tab-forward&quot; type=&quot;button&quot; role=&quot;tab&quot; aria-controls=&quot;cs-forward-panel&quot; aria-selected=&quot;true&quot;&gt;将来を計算&lt;/button&gt;
     &lt;button class=&quot;tab-button&quot; id=&quot;cs-tab-goal&quot; type=&quot;button&quot; role=&quot;tab&quot; aria-controls=&quot;cs-goal-panel&quot; aria-selected=&quot;false&quot;&gt;目標から逆算&lt;/button&gt;
+    &lt;button class=&quot;tab-button&quot; id=&quot;cs-tab-combined&quot; type=&quot;button&quot; role=&quot;tab&quot; aria-controls=&quot;cs-combined-panel&quot; aria-selected=&quot;false&quot;&gt;NISA＋DC&lt;/button&gt;
   &lt;/div&gt;
 
   &lt;div class=&quot;viz-controls controls-wrap&quot; aria-label=&quot;運用条件&quot;&gt;
@@ -1123,13 +1124,51 @@ html&gt;body{padding:0}&lt;/style&gt;
     &lt;/div&gt;
   &lt;/div&gt;
 
+  &lt;div class=&quot;tab-panel&quot; id=&quot;cs-combined-panel&quot; role=&quot;tabpanel&quot; aria-labelledby=&quot;cs-tab-combined&quot; hidden&gt;
+    &lt;div class=&quot;viz-controls controls-wrap&quot; aria-label=&quot;DC条件&quot;&gt;
+      &lt;label class=&quot;form-label&quot; for=&quot;cs-dc-current&quot;&gt;DC現在額（円）
+        &lt;input class=&quot;form-control&quot; id=&quot;cs-dc-current&quot; type=&quot;text&quot; value=&quot;800,000&quot; inputmode=&quot;numeric&quot; pattern=&quot;[0-9,]*&quot;&gt;
+      &lt;/label&gt;
+      &lt;label class=&quot;form-label&quot; for=&quot;cs-dc-monthly&quot;&gt;DC月々の拠出（円）
+        &lt;input class=&quot;form-control&quot; id=&quot;cs-dc-monthly&quot; type=&quot;text&quot; value=&quot;20,000&quot; inputmode=&quot;numeric&quot; pattern=&quot;[0-9,]*&quot;&gt;
+      &lt;/label&gt;
+      &lt;label class=&quot;form-label&quot; for=&quot;cs-dc-rate&quot;&gt;DC年間利回り（%）
+        &lt;input class=&quot;form-control&quot; id=&quot;cs-dc-rate&quot; type=&quot;number&quot; min=&quot;-99&quot; max=&quot;100&quot; step=&quot;0.1&quot; value=&quot;5&quot; inputmode=&quot;decimal&quot;&gt;
+      &lt;/label&gt;
+      &lt;p class=&quot;limit-note text-small&quot;&gt;通常資産は上の取得額・現在の評価額・月々の積立・年間利回り・NISA設定を使います。期間と目標金額は「目標から逆算」と同じ入力を使います。&lt;/p&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;goal-summary&quot; aria-live=&quot;polite&quot;&gt;
+      &lt;div class=&quot;card viz-stat goal-primary&quot;&gt;
+        &lt;div class=&quot;text-muted&quot;&gt;目標年齢時点の合計資産&lt;/div&gt;
+        &lt;div class=&quot;viz-stat-value&quot; id=&quot;cs-combined-total&quot;&gt;—&lt;/div&gt;
+        &lt;div class=&quot;text-small text-muted&quot; id=&quot;cs-combined-gap&quot;&gt;—&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;card viz-stat&quot;&gt;
+        &lt;div class=&quot;text-muted&quot;&gt;通常資産&lt;/div&gt;
+        &lt;div class=&quot;viz-stat-value&quot; id=&quot;cs-combined-regular&quot;&gt;—&lt;/div&gt;
+        &lt;div class=&quot;text-small text-muted&quot;&gt;NISA設定を反映&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;card viz-stat&quot;&gt;
+        &lt;div class=&quot;text-muted&quot;&gt;DC資産&lt;/div&gt;
+        &lt;div class=&quot;viz-stat-value&quot; id=&quot;cs-combined-dc&quot;&gt;—&lt;/div&gt;
+        &lt;div class=&quot;text-small text-muted&quot; id=&quot;cs-combined-dc-note&quot;&gt;—&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;card viz-stat&quot;&gt;
+        &lt;div class=&quot;text-muted&quot;&gt;積立期間&lt;/div&gt;
+        &lt;div class=&quot;viz-stat-value&quot; id=&quot;cs-combined-years&quot;&gt;—&lt;/div&gt;
+        &lt;div class=&quot;text-small text-muted&quot; id=&quot;cs-combined-months&quot;&gt;—&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
   &lt;script&gt;
   (() =&gt; {
     const root = document.getElementById(&#x27;compound-sim-jp&#x27;);
     const $ = id =&gt; root.querySelector(&#x27;#&#x27; + id);
-    const amountInputs = [&#x27;cs-cost&#x27;, &#x27;cs-current&#x27;, &#x27;cs-monthly&#x27;, &#x27;cs-target-amount&#x27;].map($);
-    const inputs = [&#x27;cs-cost&#x27;, &#x27;cs-current&#x27;, &#x27;cs-monthly&#x27;, &#x27;cs-rate&#x27;, &#x27;cs-nisa&#x27;, &#x27;cs-current-age&#x27;, &#x27;cs-target-age&#x27;, &#x27;cs-target-amount&#x27;].map($);
-    const tabs = [&#x27;forward&#x27;, &#x27;goal&#x27;];
+    const amountInputs = [&#x27;cs-cost&#x27;, &#x27;cs-current&#x27;, &#x27;cs-monthly&#x27;, &#x27;cs-target-amount&#x27;, &#x27;cs-dc-current&#x27;, &#x27;cs-dc-monthly&#x27;].map($);
+    const inputs = [&#x27;cs-cost&#x27;, &#x27;cs-current&#x27;, &#x27;cs-monthly&#x27;, &#x27;cs-rate&#x27;, &#x27;cs-nisa&#x27;, &#x27;cs-current-age&#x27;, &#x27;cs-target-age&#x27;, &#x27;cs-target-amount&#x27;, &#x27;cs-dc-current&#x27;, &#x27;cs-dc-monthly&#x27;, &#x27;cs-dc-rate&#x27;].map($);
+    const tabs = [&#x27;forward&#x27;, &#x27;goal&#x27;, &#x27;combined&#x27;];
     const taxRate = 0.20315;
     const nisaLifetimeLimit = 18000000;
     const nisaAnnualLimit = 3600000;
@@ -1242,9 +1281,38 @@ html&gt;body{padding:0}&lt;/style&gt;
       return { rows: project(months, neededMonthly, base), months, years, neededMonthly, targetAmount, reachable: true };
     }
 
+    function projectDc(months) {
+      const currentValue = Math.max(0, cleanAmount($(&#x27;cs-dc-current&#x27;)));
+      const monthly = Math.max(0, cleanAmount($(&#x27;cs-dc-monthly&#x27;)));
+      const annual = Math.max(-99, clean($(&#x27;cs-dc-rate&#x27;))) / 100;
+      const monthlyRate = Math.pow(1 + annual, 1 / 12) - 1;
+      let balance = currentValue;
+      let contributed = currentValue;
+      for (let month = 1; month &lt;= months; month++) {
+        balance = balance * (1 + monthlyRate) + monthly;
+        contributed += monthly;
+      }
+      return { balance, contributed, monthly };
+    }
+
+    function calculateCombined() {
+      const base = getBaseInputs();
+      const currentAge = Math.max(0, clean($(&#x27;cs-current-age&#x27;)));
+      const targetAge = Math.max(0, clean($(&#x27;cs-target-age&#x27;)));
+      const targetAmount = Math.max(0, cleanAmount($(&#x27;cs-target-amount&#x27;)));
+      const years = Math.max(0, targetAge - currentAge);
+      const months = Math.round(years * 12);
+      const regularMonthly = Math.max(0, cleanAmount($(&#x27;cs-monthly&#x27;)));
+      const regular = lastOf(project(months, regularMonthly, base));
+      const dc = projectDc(months);
+      const total = regular.balance + dc.balance;
+      return { regular, dc, total, targetAmount, gap: total - targetAmount, years, months };
+    }
+
     function render() {
       const state = calculate();
       const goal = calculateGoal();
+      const combined = calculateCombined();
       const last = state.rows[state.rows.length - 1];
       $(&#x27;cs-nisa-label&#x27;).textContent = state.nisa ? &#x27;NISAを利用する&#x27; : &#x27;NISAを利用しない&#x27;;
       $(&#x27;cs-mode-note&#x27;).textContent = state.nisa ? &#x27;NISAの非課税枠で計算&#x27; : &#x27;売却時の想定税額を差し引いて表示&#x27;;
@@ -1260,6 +1328,7 @@ html&gt;body{padding:0}&lt;/style&gt;
       $(&#x27;cs-multiple&#x27;).textContent = last.contributed &gt; 0 ? &#x27;投資額の &#x27; + (last.balance / last.contributed).toFixed(2) + &#x27;倍&#x27; : &#x27;—&#x27;;
       $(&#x27;cs-body&#x27;).innerHTML = state.rows.slice(1).map(d =&gt; `&lt;tr&gt;&lt;td&gt;${d.year}年&lt;/td&gt;&lt;td class=&quot;text-end text-nowrap&quot;&gt;${yen.format(d.balance)}&lt;/td&gt;&lt;td class=&quot;text-end text-nowrap&quot;&gt;${yen.format(d.contributed)}&lt;/td&gt;&lt;td class=&quot;text-end text-nowrap ${d.gain &gt;= 0 ? &#x27;gain-positive&#x27; : &#x27;gain-negative&#x27;}&quot;&gt;${yen.format(d.gain)}&lt;/td&gt;&lt;td class=&quot;text-end text-nowrap&quot;&gt;${yen.format(d.potentialTax)}&lt;/td&gt;&lt;/tr&gt;`).join(&#x27;&#x27;);
       renderGoal(goal);
+      renderCombined(combined);
       draw(state.rows);
     }
 
@@ -1273,6 +1342,18 @@ html&gt;body{padding:0}&lt;/style&gt;
       $(&#x27;cs-goal-months&#x27;).textContent = goal.months.toLocaleString(&#x27;ja-JP&#x27;) + &#x27;か月で計算&#x27;;
       $(&#x27;cs-goal-final&#x27;).textContent = yen.format(last.balance);
       $(&#x27;cs-goal-contrib&#x27;).textContent = yen.format(last.contributed);
+    }
+
+    function renderCombined(combined) {
+      $(&#x27;cs-combined-total&#x27;).textContent = yen.format(combined.total);
+      $(&#x27;cs-combined-gap&#x27;).textContent = combined.gap &gt;= 0
+        ? &#x27;目標まで &#x27; + yen.format(combined.gap) + &#x27; 上回っています&#x27;
+        : &#x27;目標まであと &#x27; + yen.format(Math.abs(combined.gap));
+      $(&#x27;cs-combined-regular&#x27;).textContent = yen.format(combined.regular.balance);
+      $(&#x27;cs-combined-dc&#x27;).textContent = yen.format(combined.dc.balance);
+      $(&#x27;cs-combined-dc-note&#x27;).textContent = &#x27;拠出累計 &#x27; + yen.format(combined.dc.contributed);
+      $(&#x27;cs-combined-years&#x27;).textContent = combined.years.toFixed(combined.years % 1 === 0 ? 0 : 1) + &#x27;年&#x27;;
+      $(&#x27;cs-combined-months&#x27;).textContent = combined.months.toLocaleString(&#x27;ja-JP&#x27;) + &#x27;か月で計算&#x27;;
     }
 
     function activateTab(name) {
