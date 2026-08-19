@@ -1013,7 +1013,7 @@ html&gt;body{padding:0}&lt;/style&gt;
   &lt;div class=&quot;tabs&quot; role=&quot;tablist&quot; aria-label=&quot;計算モード&quot;&gt;
     &lt;button class=&quot;tab-button&quot; id=&quot;cs-tab-forward&quot; type=&quot;button&quot; role=&quot;tab&quot; aria-controls=&quot;cs-forward-panel&quot; aria-selected=&quot;true&quot;&gt;将来を計算&lt;/button&gt;
     &lt;button class=&quot;tab-button&quot; id=&quot;cs-tab-goal&quot; type=&quot;button&quot; role=&quot;tab&quot; aria-controls=&quot;cs-goal-panel&quot; aria-selected=&quot;false&quot;&gt;目標から逆算&lt;/button&gt;
-    &lt;button class=&quot;tab-button&quot; id=&quot;cs-tab-combined&quot; type=&quot;button&quot; role=&quot;tab&quot; aria-controls=&quot;cs-combined-panel&quot; aria-selected=&quot;false&quot;&gt;NISA＋DC&lt;/button&gt;
+    &lt;button class=&quot;tab-button&quot; id=&quot;cs-tab-combined&quot; type=&quot;button&quot; role=&quot;tab&quot; aria-controls=&quot;cs-combined-panel&quot; aria-selected=&quot;false&quot;&gt;将来を計算＋DC&lt;/button&gt;
   &lt;/div&gt;
 
   &lt;div class=&quot;viz-controls controls-wrap&quot; aria-label=&quot;運用条件&quot;&gt;
@@ -1122,6 +1122,30 @@ html&gt;body{padding:0}&lt;/style&gt;
         &lt;div class=&quot;text-small text-muted&quot;&gt;取得額＋必要積立額&lt;/div&gt;
       &lt;/div&gt;
     &lt;/div&gt;
+
+    &lt;section aria-labelledby=&quot;cs-combined-chart-title&quot;&gt;
+      &lt;div class=&quot;chart-head&quot;&gt;
+        &lt;h2 id=&quot;cs-combined-chart-title&quot;&gt;合計資産の推移&lt;/h2&gt;
+        &lt;div class=&quot;legend text-small&quot; aria-label=&quot;凡例&quot;&gt;
+          &lt;span&gt;&lt;i class=&quot;swatch total&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;合計資産&lt;/span&gt;
+          &lt;span&gt;&lt;i class=&quot;swatch paid&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;累計投資・拠出額&lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;plot-relative&quot;&gt;
+        &lt;div id=&quot;cs-combined-chart&quot; class=&quot;chart-shell&quot;&gt;&lt;/div&gt;
+        &lt;div id=&quot;cs-combined-tip&quot; class=&quot;tooltip&quot; role=&quot;tooltip&quot; hidden&gt;&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;table-block&quot; aria-labelledby=&quot;cs-combined-table-title&quot;&gt;
+      &lt;h2 id=&quot;cs-combined-table-title&quot;&gt;年ごとの明細&lt;/h2&gt;
+      &lt;div class=&quot;table-responsive&quot;&gt;
+        &lt;table class=&quot;table table-sm&quot;&gt;
+          &lt;thead&gt;&lt;tr&gt;&lt;th&gt;年&lt;/th&gt;&lt;th&gt;年齢&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;合計資産&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;通常資産&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;DC資産&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;累計投資・拠出額&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+          &lt;tbody id=&quot;cs-combined-body&quot;&gt;&lt;/tbody&gt;
+        &lt;/table&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
   &lt;/div&gt;
 
   &lt;div class=&quot;tab-panel&quot; id=&quot;cs-combined-panel&quot; role=&quot;tabpanel&quot; aria-labelledby=&quot;cs-tab-combined&quot; hidden&gt;
@@ -1284,18 +1308,20 @@ html&gt;body{padding:0}&lt;/style&gt;
       return { rows: project(months, neededMonthly, base), months, years, neededMonthly, targetAmount, reachable: true };
     }
 
-    function projectDc(months) {
+    function projectDc(months, currentAge = getBaseInputs().currentAge) {
       const currentValue = Math.max(0, cleanAmount($(&#x27;cs-dc-current&#x27;)));
       const monthly = Math.max(0, cleanAmount($(&#x27;cs-dc-monthly&#x27;)));
       const annual = Math.max(-99, clean($(&#x27;cs-dc-rate&#x27;))) / 100;
       const monthlyRate = Math.pow(1 + annual, 1 / 12) - 1;
       let balance = currentValue;
       let contributed = currentValue;
+      const rows = [{ year: 0, age: currentAge, balance, contributed, monthly }];
       for (let month = 1; month &lt;= months; month++) {
         balance = balance * (1 + monthlyRate) + monthly;
         contributed += monthly;
+        if (month % 12 === 0 || month === months) rows.push({ year: month / 12, age: currentAge + month / 12, balance, contributed, monthly });
       }
-      return { balance, contributed, monthly };
+      return rows;
     }
 
     function calculateCombined() {
@@ -1303,10 +1329,25 @@ html&gt;body{padding:0}&lt;/style&gt;
       const years = 50;
       const months = Math.round(years * 12);
       const regularMonthly = Math.max(0, cleanAmount($(&#x27;cs-monthly&#x27;)));
-      const regular = lastOf(project(months, regularMonthly, base));
-      const dc = projectDc(months);
+      const regularRows = project(months, regularMonthly, base);
+      const dcRows = projectDc(months, base.currentAge);
+      const rows = regularRows.map((regular, index) =&gt; {
+        const dc = dcRows[index] || lastOf(dcRows);
+        return {
+          year: regular.year,
+          age: regular.age,
+          balance: regular.balance + dc.balance,
+          contributed: regular.contributed + dc.contributed,
+          regularBalance: regular.balance,
+          dcBalance: dc.balance,
+          regularContributed: regular.contributed,
+          dcContributed: dc.contributed
+        };
+      });
+      const regular = lastOf(regularRows);
+      const dc = lastOf(dcRows);
       const total = regular.balance + dc.balance;
-      return { regular, dc, total, targetAge: base.currentAge + years, years, months };
+      return { rows, regular, dc, total, targetAge: base.currentAge + years, years, months };
     }
 
     function render() {
@@ -1354,6 +1395,8 @@ html&gt;body{padding:0}&lt;/style&gt;
       $(&#x27;cs-combined-dc-note&#x27;).textContent = &#x27;拠出累計 &#x27; + yen.format(combined.dc.contributed);
       $(&#x27;cs-combined-years&#x27;).textContent = combined.years.toFixed(combined.years % 1 === 0 ? 0 : 1) + &#x27;年&#x27;;
       $(&#x27;cs-combined-months&#x27;).textContent = combined.months.toLocaleString(&#x27;ja-JP&#x27;) + &#x27;か月で計算&#x27;;
+      $(&#x27;cs-combined-body&#x27;).innerHTML = combined.rows.slice(1).map(d =&gt; `&lt;tr&gt;&lt;td&gt;${d.year.toFixed(d.year % 1 === 0 ? 0 : 1)}年後&lt;/td&gt;&lt;td&gt;${d.age.toFixed(d.age % 1 === 0 ? 0 : 1)}歳&lt;/td&gt;&lt;td class=&quot;text-end text-nowrap&quot;&gt;${yen.format(d.balance)}&lt;/td&gt;&lt;td class=&quot;text-end text-nowrap&quot;&gt;${yen.format(d.regularBalance)}&lt;/td&gt;&lt;td class=&quot;text-end text-nowrap&quot;&gt;${yen.format(d.dcBalance)}&lt;/td&gt;&lt;td class=&quot;text-end text-nowrap&quot;&gt;${yen.format(d.contributed)}&lt;/td&gt;&lt;/tr&gt;`).join(&#x27;&#x27;);
+      draw(combined.rows, &#x27;cs-combined-chart&#x27;, &#x27;cs-combined-tip&#x27;, &#x27;合計資産&#x27;, &#x27;累計投資・拠出額&#x27;);
     }
 
     function activateTab(name) {
@@ -1366,8 +1409,8 @@ html&gt;body{padding:0}&lt;/style&gt;
       schedule();
     }
 
-    function draw(data) {
-      const host = $(&#x27;cs-chart&#x27;);
+    function draw(data, chartId = &#x27;cs-chart&#x27;, tipId = &#x27;cs-tip&#x27;, totalLabel = &#x27;資産総額&#x27;, paidLabel = &#x27;累計投資額&#x27;) {
+      const host = $(chartId);
       const width = Math.max(320, Math.floor(host.getBoundingClientRect().width));
       const height = width &lt; 520 ? 245 : 280;
       const margin = { top: 12, right: 16, bottom: 44, left: width &lt; 420 ? 68 : 82 };
@@ -1386,8 +1429,8 @@ html&gt;body{padding:0}&lt;/style&gt;
       const yTicks = Array.from({length: 5}, (_, i) =&gt; yMin + (yMax - yMin) * i / 4);
       const tickCount = width &lt; 420 ? 4 : 6;
       const xTicks = Array.from({length: tickCount}, (_, i) =&gt; maxYear * i / (tickCount - 1));
-      host.innerHTML = `&lt;svg class=&quot;chart-svg&quot; viewBox=&quot;0 0 ${width} ${height}&quot; role=&quot;img&quot; aria-label=&quot;0年から50年までの資産総額と累計投資額の推移&quot;&gt;
-        &lt;title&gt;50年間の資産推移&lt;/title&gt;&lt;desc&gt;実線が資産総額、破線が累計投資額です。&lt;/desc&gt;
+      host.innerHTML = `&lt;svg class=&quot;chart-svg&quot; viewBox=&quot;0 0 ${width} ${height}&quot; role=&quot;img&quot; aria-label=&quot;0年から50年までの${totalLabel}と${paidLabel}の推移&quot;&gt;
+        &lt;title&gt;50年間の資産推移&lt;/title&gt;&lt;desc&gt;実線が${totalLabel}、破線が${paidLabel}です。&lt;/desc&gt;
         ${yTicks.map(v =&gt; `&lt;line class=&quot;grid-line&quot; x1=&quot;${margin.left}&quot; x2=&quot;${width-margin.right}&quot; y1=&quot;${y(v)}&quot; y2=&quot;${y(v)}&quot;&gt;&lt;/line&gt;&lt;text class=&quot;axis-muted&quot; text-anchor=&quot;end&quot; x=&quot;${margin.left-8}&quot; y=&quot;${y(v)+4}&quot;&gt;${shortYen(v)}&lt;/text&gt;`).join(&#x27;&#x27;)}
         ${xTicks.map(v =&gt; `&lt;text class=&quot;axis-muted&quot; text-anchor=&quot;middle&quot; x=&quot;${x(v)}&quot; y=&quot;${height-19}&quot;&gt;${Number.isInteger(v) ? v : v.toFixed(1)}&lt;/text&gt;`).join(&#x27;&#x27;)}
         &lt;rect data-chart-frame class=&quot;chart-frame&quot; x=&quot;${margin.left}&quot; y=&quot;${margin.top}&quot; width=&quot;${iw}&quot; height=&quot;${ih}&quot;&gt;&lt;/rect&gt;
@@ -1403,7 +1446,7 @@ html&gt;body{padding:0}&lt;/style&gt;
       &lt;/svg&gt;`;
       const svg = host.querySelector(&#x27;svg&#x27;);
       const overlay = svg.querySelector(&#x27;[data-chart-hit]&#x27;);
-      const tip = $(&#x27;cs-tip&#x27;);
+      const tip = $(tipId);
       const line = svg.querySelector(&#x27;#cs-hover-line&#x27;);
       const dotT = svg.querySelector(&#x27;#cs-dot-total&#x27;);
       const dotP = svg.querySelector(&#x27;#cs-dot-paid&#x27;);
@@ -1418,7 +1461,7 @@ html&gt;body{padding:0}&lt;/style&gt;
         line.setAttribute(&#x27;x1&#x27;, px); line.setAttribute(&#x27;x2&#x27;, px); line.hidden = false;
         dotT.setAttribute(&#x27;cx&#x27;, px); dotT.setAttribute(&#x27;cy&#x27;, y(total)); dotT.hidden = false;
         dotP.setAttribute(&#x27;cx&#x27;, px); dotP.setAttribute(&#x27;cy&#x27;, y(paid)); dotP.hidden = false;
-        tip.innerHTML = `&lt;strong&gt;${year.toFixed(1)}年後（${age.toFixed(1)}歳）&lt;/strong&gt;&lt;br&gt;資産総額　${yen.format(total)}&lt;br&gt;累計投資額　${yen.format(paid)}`;
+        tip.innerHTML = `&lt;strong&gt;${year.toFixed(1)}年後（${age.toFixed(1)}歳）&lt;/strong&gt;&lt;br&gt;${totalLabel}　${yen.format(total)}&lt;br&gt;${paidLabel}　${yen.format(paid)}`;
         tip.hidden = false;
         const left = Math.min(Math.max(4, e.clientX - rect.left + 12), rect.width - tip.offsetWidth - 4);
         const top = Math.max(4, e.clientY - rect.top - tip.offsetHeight - 10);
