@@ -1003,13 +1003,13 @@ html&gt;body{padding:0}&lt;/style&gt;
 
   &lt;div class=&quot;viz-controls controls-wrap&quot; aria-label=&quot;運用条件&quot;&gt;
     &lt;label class=&quot;form-label&quot; for=&quot;cs-cost&quot;&gt;取得額（円）
-      &lt;input class=&quot;form-control&quot; id=&quot;cs-cost&quot; type=&quot;number&quot; min=&quot;0&quot; step=&quot;10000&quot; value=&quot;1000000&quot; inputmode=&quot;numeric&quot;&gt;
+      &lt;input class=&quot;form-control&quot; id=&quot;cs-cost&quot; type=&quot;text&quot; value=&quot;1,000,000&quot; inputmode=&quot;numeric&quot; pattern=&quot;[0-9,]*&quot;&gt;
     &lt;/label&gt;
     &lt;label class=&quot;form-label&quot; for=&quot;cs-current&quot;&gt;現在の評価額（円）
-      &lt;input class=&quot;form-control&quot; id=&quot;cs-current&quot; type=&quot;number&quot; min=&quot;0&quot; step=&quot;10000&quot; value=&quot;1200000&quot; inputmode=&quot;numeric&quot;&gt;
+      &lt;input class=&quot;form-control&quot; id=&quot;cs-current&quot; type=&quot;text&quot; value=&quot;1,200,000&quot; inputmode=&quot;numeric&quot; pattern=&quot;[0-9,]*&quot;&gt;
     &lt;/label&gt;
     &lt;label class=&quot;form-label&quot; for=&quot;cs-monthly&quot;&gt;月々の積立（円）
-      &lt;input class=&quot;form-control&quot; id=&quot;cs-monthly&quot; type=&quot;number&quot; min=&quot;0&quot; step=&quot;1000&quot; value=&quot;30000&quot; inputmode=&quot;numeric&quot;&gt;
+      &lt;input class=&quot;form-control&quot; id=&quot;cs-monthly&quot; type=&quot;text&quot; value=&quot;30,000&quot; inputmode=&quot;numeric&quot; pattern=&quot;[0-9,]*&quot;&gt;
     &lt;/label&gt;
     &lt;label class=&quot;form-label&quot; for=&quot;cs-rate&quot;&gt;年間利回り（%）
       &lt;input class=&quot;form-control&quot; id=&quot;cs-rate&quot; type=&quot;number&quot; min=&quot;-99&quot; max=&quot;100&quot; step=&quot;0.1&quot; value=&quot;5&quot; inputmode=&quot;decimal&quot;&gt;
@@ -1074,6 +1074,7 @@ html&gt;body{padding:0}&lt;/style&gt;
   (() =&gt; {
     const root = document.getElementById(&#x27;compound-sim-jp&#x27;);
     const $ = id =&gt; root.querySelector(&#x27;#&#x27; + id);
+    const amountInputs = [&#x27;cs-cost&#x27;, &#x27;cs-current&#x27;, &#x27;cs-monthly&#x27;].map($);
     const inputs = [&#x27;cs-cost&#x27;, &#x27;cs-current&#x27;, &#x27;cs-monthly&#x27;, &#x27;cs-rate&#x27;, &#x27;cs-nisa&#x27;].map($);
     const taxRate = 0.20315;
     const nisaLifetimeLimit = 18000000;
@@ -1086,11 +1087,33 @@ html&gt;body{padding:0}&lt;/style&gt;
       return Math.round(value).toLocaleString(&#x27;ja-JP&#x27;) + &#x27;円&#x27;;
     };
     const clean = (el, fallback = 0) =&gt; Number.isFinite(Number(el.value)) ? Number(el.value) : fallback;
+    const cleanAmount = (el, fallback = 0) =&gt; {
+      const value = Number(String(el.value).replace(/[^\d]/g, &#x27;&#x27;));
+      return Number.isFinite(value) ? value : fallback;
+    };
+    const formatAmountInput = (el, keepCaret = false) =&gt; {
+      const caretDigits = keepCaret
+        ? String(el.value).slice(0, el.selectionStart ?? 0).replace(/[^\d]/g, &#x27;&#x27;).length
+        : null;
+      const raw = String(el.value).replace(/[^\d]/g, &#x27;&#x27;);
+      el.value = raw ? Number(raw).toLocaleString(&#x27;ja-JP&#x27;) : &#x27;&#x27;;
+      if (caretDigits == null) return;
+      let digitCount = 0;
+      let caret = el.value.length;
+      for (let i = 0; i &lt; el.value.length; i++) {
+        if (/\d/.test(el.value[i])) digitCount++;
+        if (digitCount &gt;= caretDigits) {
+          caret = i + 1;
+          break;
+        }
+      }
+      el.setSelectionRange(caret, caret);
+    };
 
     function calculate() {
-      const acquisitionCost = Math.max(0, clean($(&#x27;cs-cost&#x27;)));
-      const currentValue = Math.max(0, clean($(&#x27;cs-current&#x27;)));
-      const monthly = Math.max(0, clean($(&#x27;cs-monthly&#x27;)));
+      const acquisitionCost = Math.max(0, cleanAmount($(&#x27;cs-cost&#x27;)));
+      const currentValue = Math.max(0, cleanAmount($(&#x27;cs-current&#x27;)));
+      const monthly = Math.max(0, cleanAmount($(&#x27;cs-monthly&#x27;)));
       const annual = Math.max(-99, clean($(&#x27;cs-rate&#x27;))) / 100;
       const nisa = $(&#x27;cs-nisa&#x27;).checked;
       const monthlyRate = Math.pow(1 + annual, 1 / 12) - 1;
@@ -1198,6 +1221,10 @@ html&gt;body{padding:0}&lt;/style&gt;
 
     let frame;
     const schedule = () =&gt; { cancelAnimationFrame(frame); frame = requestAnimationFrame(render); };
+    amountInputs.forEach(el =&gt; {
+      formatAmountInput(el);
+      el.addEventListener(&#x27;input&#x27;, () =&gt; formatAmountInput(el, true));
+    });
     inputs.forEach(el =&gt; el.addEventListener(&#x27;input&#x27;, schedule));
     new ResizeObserver(schedule).observe($(&#x27;cs-chart&#x27;));
     render();
