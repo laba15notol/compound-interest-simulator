@@ -1012,8 +1012,8 @@ html&gt;body{padding:0}&lt;/style&gt;
 
   &lt;div class=&quot;tabs&quot; role=&quot;tablist&quot; aria-label=&quot;計算モード&quot;&gt;
     &lt;button class=&quot;tab-button&quot; id=&quot;cs-tab-forward&quot; type=&quot;button&quot; role=&quot;tab&quot; aria-controls=&quot;cs-forward-panel&quot; aria-selected=&quot;true&quot;&gt;将来を計算&lt;/button&gt;
-    &lt;button class=&quot;tab-button&quot; id=&quot;cs-tab-goal&quot; type=&quot;button&quot; role=&quot;tab&quot; aria-controls=&quot;cs-goal-panel&quot; aria-selected=&quot;false&quot;&gt;目標から逆算&lt;/button&gt;
     &lt;button class=&quot;tab-button&quot; id=&quot;cs-tab-combined&quot; type=&quot;button&quot; role=&quot;tab&quot; aria-controls=&quot;cs-combined-panel&quot; aria-selected=&quot;false&quot;&gt;将来を計算＋DC&lt;/button&gt;
+    &lt;button class=&quot;tab-button&quot; id=&quot;cs-tab-goal&quot; type=&quot;button&quot; role=&quot;tab&quot; aria-controls=&quot;cs-goal-panel&quot; aria-selected=&quot;false&quot;&gt;目標から逆算&lt;/button&gt;
   &lt;/div&gt;
 
   &lt;div class=&quot;viz-controls controls-wrap&quot; aria-label=&quot;運用条件&quot;&gt;
@@ -1123,29 +1123,6 @@ html&gt;body{padding:0}&lt;/style&gt;
       &lt;/div&gt;
     &lt;/div&gt;
 
-    &lt;section aria-labelledby=&quot;cs-combined-chart-title&quot;&gt;
-      &lt;div class=&quot;chart-head&quot;&gt;
-        &lt;h2 id=&quot;cs-combined-chart-title&quot;&gt;合計資産の推移&lt;/h2&gt;
-        &lt;div class=&quot;legend text-small&quot; aria-label=&quot;凡例&quot;&gt;
-          &lt;span&gt;&lt;i class=&quot;swatch total&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;合計資産&lt;/span&gt;
-          &lt;span&gt;&lt;i class=&quot;swatch paid&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;累計投資・拠出額&lt;/span&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;plot-relative&quot;&gt;
-        &lt;div id=&quot;cs-combined-chart&quot; class=&quot;chart-shell&quot;&gt;&lt;/div&gt;
-        &lt;div id=&quot;cs-combined-tip&quot; class=&quot;tooltip&quot; role=&quot;tooltip&quot; hidden&gt;&lt;/div&gt;
-      &lt;/div&gt;
-    &lt;/section&gt;
-
-    &lt;section class=&quot;table-block&quot; aria-labelledby=&quot;cs-combined-table-title&quot;&gt;
-      &lt;h2 id=&quot;cs-combined-table-title&quot;&gt;年ごとの明細&lt;/h2&gt;
-      &lt;div class=&quot;table-responsive&quot;&gt;
-        &lt;table class=&quot;table table-sm&quot;&gt;
-          &lt;thead&gt;&lt;tr&gt;&lt;th&gt;年&lt;/th&gt;&lt;th&gt;年齢&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;合計資産&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;通常資産&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;DC資産&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;累計投資・拠出額&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
-          &lt;tbody id=&quot;cs-combined-body&quot;&gt;&lt;/tbody&gt;
-        &lt;/table&gt;
-      &lt;/div&gt;
-    &lt;/section&gt;
   &lt;/div&gt;
 
   &lt;div class=&quot;tab-panel&quot; id=&quot;cs-combined-panel&quot; role=&quot;tabpanel&quot; aria-labelledby=&quot;cs-tab-combined&quot; hidden&gt;
@@ -1184,6 +1161,30 @@ html&gt;body{padding:0}&lt;/style&gt;
         &lt;div class=&quot;text-small text-muted&quot; id=&quot;cs-combined-months&quot;&gt;—&lt;/div&gt;
       &lt;/div&gt;
     &lt;/div&gt;
+
+    &lt;section aria-labelledby=&quot;cs-combined-chart-title&quot;&gt;
+      &lt;div class=&quot;chart-head&quot;&gt;
+        &lt;h2 id=&quot;cs-combined-chart-title&quot;&gt;合計資産の推移&lt;/h2&gt;
+        &lt;div class=&quot;legend text-small&quot; aria-label=&quot;凡例&quot;&gt;
+          &lt;span&gt;&lt;i class=&quot;swatch total&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;合計資産&lt;/span&gt;
+          &lt;span&gt;&lt;i class=&quot;swatch paid&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;累計投資・拠出額&lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;plot-relative&quot;&gt;
+        &lt;div id=&quot;cs-combined-chart&quot; class=&quot;chart-shell&quot;&gt;&lt;/div&gt;
+        &lt;div id=&quot;cs-combined-tip&quot; class=&quot;tooltip&quot; role=&quot;tooltip&quot; hidden&gt;&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;table-block&quot; aria-labelledby=&quot;cs-combined-table-title&quot;&gt;
+      &lt;h2 id=&quot;cs-combined-table-title&quot;&gt;年ごとの明細&lt;/h2&gt;
+      &lt;div class=&quot;table-responsive&quot;&gt;
+        &lt;table class=&quot;table table-sm&quot;&gt;
+          &lt;thead&gt;&lt;tr&gt;&lt;th&gt;年&lt;/th&gt;&lt;th&gt;年齢&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;合計資産&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;通常資産&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;DC資産&lt;/th&gt;&lt;th class=&quot;text-end&quot;&gt;累計投資・拠出額&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+          &lt;tbody id=&quot;cs-combined-body&quot;&gt;&lt;/tbody&gt;
+        &lt;/table&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
   &lt;/div&gt;
 
   &lt;script&gt;
@@ -1192,7 +1193,7 @@ html&gt;body{padding:0}&lt;/style&gt;
     const $ = id =&gt; root.querySelector(&#x27;#&#x27; + id);
     const amountInputs = [&#x27;cs-cost&#x27;, &#x27;cs-current&#x27;, &#x27;cs-monthly&#x27;, &#x27;cs-target-amount&#x27;, &#x27;cs-dc-current&#x27;, &#x27;cs-dc-monthly&#x27;].map($);
     const inputs = [&#x27;cs-cost&#x27;, &#x27;cs-current&#x27;, &#x27;cs-monthly&#x27;, &#x27;cs-rate&#x27;, &#x27;cs-nisa&#x27;, &#x27;cs-current-age&#x27;, &#x27;cs-target-age&#x27;, &#x27;cs-target-amount&#x27;, &#x27;cs-dc-current&#x27;, &#x27;cs-dc-monthly&#x27;, &#x27;cs-dc-rate&#x27;].map($);
-    const tabs = [&#x27;forward&#x27;, &#x27;goal&#x27;, &#x27;combined&#x27;];
+    const tabs = [&#x27;forward&#x27;, &#x27;combined&#x27;, &#x27;goal&#x27;];
     const taxRate = 0.20315;
     const nisaLifetimeLimit = 18000000;
     const nisaAnnualLimit = 3600000;
